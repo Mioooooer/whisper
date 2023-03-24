@@ -17,7 +17,7 @@ class Window(QMainWindow):
         self.setAcceptDrops(True)  # ==> 设置窗口支持拖动（必须设置）
         #self.model = whisper.load_model("medium")
         self.model = whisper.load_model("small")
-        self.ModelLevel = 'medium'
+        self.ModelLevel = 'small'
         self.Sheetname = 'Sheet1'
         self.TextCol = 'A'
         self.WavCol = 'B'
@@ -58,15 +58,15 @@ class Window(QMainWindow):
         CModelBtn = QPushButton('Start checking', self)
         CModelBtn.setCheckable(True)
         CModelBtn.move(10, 350)
-        PlusBtn = QPushButton('+', self)
+        PlusBtn = QPushButton('change model', self)
         PlusBtn.setCheckable(True)
         PlusBtn.move(110, 350)
-        MinusBtn = QPushButton('-', self)
-        MinusBtn.setCheckable(True)
-        MinusBtn.move(210, 350)
+        #MinusBtn = QPushButton('-', self)
+        #MinusBtn.setCheckable(True)
+        #MinusBtn.move(210, 350)
         CModelBtn.clicked[bool].connect(self.checkCV)
         PlusBtn.clicked[bool].connect(self.PlusNum)
-        MinusBtn.clicked[bool].connect(self.MinusNum)
+        #MinusBtn.clicked[bool].connect(self.MinusNum)
         #self.setGeometry(300, 300, 280, 170)
         #self.setWindowTitle('切换按钮') 
         #self.show()
@@ -127,8 +127,8 @@ class Window(QMainWindow):
             if (self.AudioSheet[self.TextCol + str(i+1)].value != '') and (self.AudioSheet[self.WavCol + str(i+1)].value != ''):
                 path = self.AudioSheet[self.WavCol + str(i+1)].value
                 result = self.model.transcribe(os.path.join(self.audiopath, path))
-                print(result)
-                print(self.AudioSheet[self.TextCol + str(i+1)].value)
+                #print(result)
+                #print(self.AudioSheet[self.TextCol + str(i+1)].value)
                 ratio = self.Compare(self.AudioSheet[self.TextCol + str(i+1)].value, result["text"])
                 if ratio < float(self.gate):
                     self.text += 'mismatching'+self.AudioSheet[self.TextCol + str(i+1)].value+'\n'+'xlsx line '+ str(i+1)+'\n'
@@ -140,15 +140,13 @@ class Window(QMainWindow):
         #print(result["text"])
 
     def PlusNum(self, pressed):
-        self.displayNum += 1
-        self.textBrowser.setText('show first')
-
-    def MinusNum(self, pressed):
-        if self.displayNum > 1:
-            self.displayNum -= 1
+        if self.ModelLevel == 'medium':
+            self.ModelLevel = 'small'
         else:
-            self.displayNum = 1
-        self.textBrowser.setText('show first results.')
+            self.ModelLevel = 'medium'
+        self.model = whisper.load_model(self.ModelLevel)
+        self.textBrowser.setText('model changed to '+self.ModelLevel+'\n'+'简中请不要使用medium!!!\n'+'medium与繁体台词配合使用')
+
 
     def TextColtext_changed(self, s):
         self.TextCol = s
@@ -163,8 +161,10 @@ class Window(QMainWindow):
         self.gate = s
 
     def Compare(self, A,B):
-        if self.is_chinese(A[0]):
-            B = zhconv.convert(B, 'zh-cn')
+        #if self.is_chinese(A[0]) and self.ModelLevel == 'medium':
+            #self.textBrowser.setText('aaaaaaaaa')
+            #B = zhconv.convert(B, 'zh-cn')
+            #self.textBrowser.setText('bbbbbbbbbbbb')
         return difflib.SequenceMatcher(None, A, B).quick_ratio()
 
     def is_chinese(self, char):
